@@ -1,4 +1,4 @@
-.PHONY: test clean format compile benchmark
+.PHONY: test clean format compile preflight benchmark
 .DEFAULT_GOAL := test
 
 FENNEL_VERSION = 1.5.3
@@ -25,3 +25,5 @@ test: artifacts/test-runner.com lua/fennel-indent/indent-parser.lua
 
 benchmark: artifacts/test-runner.com
 	@$< tasks/benchmark-realistic.fnl
+
+preflight: format test

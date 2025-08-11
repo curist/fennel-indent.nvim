@@ -10,7 +10,6 @@ Fennel indentation parser with comprehensive testing. Core parser in `scripts/in
 
 **Core Development Tasks:**
 - `make test` - Run the complete test suite using redbean-based test runner
-- `make lint` - Lint all Fennel files using fennel-ls
 - `make format` - Format all Fennel files (requires format script)
 
 **Testing:**

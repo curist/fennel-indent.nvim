@@ -73,18 +73,18 @@ vim.api.nvim_create_autocmd("FileType", {
 With semantic alignment enabled:
 
 ```fennel
-;; ✅ Aligned to first argument
+;; Aligned to first argument
 (if condition-here
     then-clause
     else-clause)
 
-;; ✅ Threading macros align consistently  
+;; Threading macros align consistently  
 (-> data
     (map transform)
     (filter predicate)
     (reduce combine))
 
-;; ✅ Boolean operators align
+;; Boolean operators align
 (and condition1
      condition2
      condition3)
@@ -93,7 +93,7 @@ With semantic alignment enabled:
 With semantic alignment disabled:
 
 ```fennel
-;; ✅ Structural indentation (base + 2)
+;; Structural indentation (base + 2)
 (if condition-here
   then-clause
   else-clause)
@@ -143,7 +143,7 @@ Real-world benchmarks comparing different formatting approaches:
 | 2000  | 2.9s (0.7/ms)      | 42ms (47.6/ms)     | **68.6x faster**       |
 | 5000  | 18.6s (0.3/ms)     | 56ms (89.7/ms)     | **333x faster**        |
 
-**💡 Key Takeaway**: Use `gqG` instead of `gg=G` for whole-file formatting on large files.
+**Key Takeaway**: Use `gqG` instead of `gg=G` for whole-file formatting on large files.
 
 **Why the difference?**
 - **`gg=G`**: Calls `indentexpr` line-by-line (O(n²) despite caching)
@@ -179,14 +179,6 @@ Real-world benchmarks comparing different formatting approaches:
 
 ```bash
 make test          # Run all tests
-make lint          # Lint Fennel files
-make preflight     # Run lint + test
-```
-
-### Build System
-
-```bash
-make compile       # Compile Fennel to Lua
 make benchmark     # Run performance tests
 ```
 
