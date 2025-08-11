@@ -17,13 +17,13 @@ format:
 
 compile: lua/fennel-indent/indent-parser.lua
 
-lua/fennel-indent/indent-parser.lua: artifacts/test-runner.com scripts/indent-parser.fnl tasks/compile-to-lua.fnl
-	@$< tasks/compile-to-lua.fnl
+lua/fennel-indent/indent-parser.lua: artifacts/test-runner.com scripts/indent-parser.fnl scripts/compile-to-lua.fnl
+	@$< scripts/compile-to-lua.fnl
 
 test: artifacts/test-runner.com lua/fennel-indent/indent-parser.lua
 	@$< $(ARGS)
 
 benchmark: artifacts/test-runner.com
-	@$< tasks/benchmark-realistic.fnl
+	@$< scripts/benchmark-realistic.fnl
 
 preflight: format test
