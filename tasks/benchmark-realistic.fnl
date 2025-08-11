@@ -1,4 +1,4 @@
-;; Realistic performance benchmark with nanosecond precision timing
+;; Realistic benchmark testing actual Vim/Neovim gg=G vs gqG behavior
 (local rb (require :redbean))
 
 (fn generate-realistic-file [lines]
@@ -32,8 +32,8 @@
     {:result result
      :duration-ms duration-ms}))
 
-(fn benchmark-realistic [file-size]
-  "Benchmark with realistic file and better timing"
+(fn benchmark-gg-equal-g [file-size]
+  "Benchmark actual gg=G behavior (indentexpr)"
   (let [content (generate-realistic-file file-size)
         temp-file (os.tmpname)
         ;; Write test file
@@ -41,55 +41,110 @@
     (file:write content)
     (file:close)
 
-    ;; Measure performance with better timing
+    ;; Measure gg=G performance 
     (let [timing (time-operation 
                    (fn []
                      (let [init-file "test/minimal_init.lua"
-                           lua-file "test/apply_indentexpr.lua"
                            nvim-cmd (string.format 
-                                      "nvim --headless -u %s %s -c 'set ft=fennel' -c 'luafile %s' -c 'write' -c 'quit' 2>/dev/null"
-                                      init-file temp-file lua-file)
+                                      "nvim --headless -u %s %s -c 'set ft=fennel' -c 'normal! gg=G' -c 'write' -c 'quit' 2>/dev/null"
+                                      init-file temp-file)
                            handle (io.popen nvim-cmd)]
                        (handle:close))))]
 
       ;; Cleanup
       (os.remove temp-file)
 
-      {:lines file-size
+      {:method "gg=G (indentexpr)"
+       :lines file-size
+       :duration-ms timing.duration-ms
+       :lines-per-ms (/ file-size timing.duration-ms)})))
+
+(fn benchmark-gq-g [file-size]
+  "Benchmark actual gqG behavior (formatexpr)"
+  (let [content (generate-realistic-file file-size)
+        temp-file (os.tmpname)
+        ;; Write test file
+        file (io.open temp-file :w)]
+    (file:write content)
+    (file:close)
+
+    ;; Measure gqG performance
+    (let [timing (time-operation 
+                   (fn []
+                     (let [init-file "test/minimal_init.lua"
+                           nvim-cmd (string.format 
+                                      "nvim --headless -u %s %s -c 'set ft=fennel' -c 'normal! gqG' -c 'write' -c 'quit' 2>/dev/null"
+                                      init-file temp-file)
+                           handle (io.popen nvim-cmd)]
+                       (handle:close))))]
+
+      ;; Cleanup
+      (os.remove temp-file)
+
+      {:method "gqG (formatexpr)"
+       :lines file-size
+       :duration-ms timing.duration-ms
+       :lines-per-ms (/ file-size timing.duration-ms)})))
+
+(fn benchmark-single-pass [file-size]
+  "Benchmark our fix-indentation function directly (theoretical best case)"
+  (let [content (generate-realistic-file file-size)
+        indent-parser (require :scripts.indent-parser)]
+    
+    (let [timing (time-operation 
+                   (fn []
+                     (indent-parser.fix-indentation content {})))]
+
+      {:method "Single-pass (fix-indentation)"
+       :lines file-size
        :duration-ms timing.duration-ms
        :lines-per-ms (/ file-size timing.duration-ms)})))
 
 (fn main []
-  "Run realistic benchmark"
-  (print "Fennel Indent Realistic Performance Benchmark")
-  (print "=============================================")
+  "Run realistic benchmark comparing all approaches"
+  (print "Fennel Indent: Real-world Performance Comparison")
+  (print "===============================================")
 
   (let [sizes [100 500 1000 2000 5000]
-        results []]
+        all-results []]
 
     (each [_ size (ipairs sizes)]
-      (print (.. "Testing " size " lines..."))
-      (let [result (benchmark-realistic size)]
-        (table.insert results result)
-        (print (string.format "  Duration: %.3fms, Lines/ms: %.1f" 
-                 result.duration-ms result.lines-per-ms))))
+      (print (.. "\n📏 Testing " size " lines:"))
+      
+      ;; Test gg=G (indentexpr)
+      (print "  Testing gg=G (indentexpr)...")
+      (let [gg-result (benchmark-gg-equal-g size)]
+        (table.insert all-results gg-result)
+        (print (string.format "    Duration: %.3fms, Lines/ms: %.1f" 
+               gg-result.duration-ms gg-result.lines-per-ms)))
+      
+      ;; Test gqG (formatexpr) 
+      (print "  Testing gqG (formatexpr)...")
+      (let [gq-result (benchmark-gq-g size)]
+        (table.insert all-results gq-result)
+        (print (string.format "    Duration: %.3fms, Lines/ms: %.1f" 
+               gq-result.duration-ms gq-result.lines-per-ms)))
+      
+      ;; Test single-pass (theoretical best)
+      (print "  Testing single-pass (fix-indentation)...")
+      (let [sp-result (benchmark-single-pass size)]
+        (table.insert all-results sp-result)
+        (print (string.format "    Duration: %.3fms, Lines/ms: %.1f" 
+               sp-result.duration-ms sp-result.lines-per-ms))))
 
-    (print "\nSummary:")
-    (print "Lines\tDuration(ms)\tLines/ms")
-    (each [_ result (ipairs results)]
-      (print (string.format "%d\t%.3f\t\t%.1f" 
-               result.lines result.duration-ms result.lines-per-ms)))
+    ;; Summary table
+    (print "\n📊 Performance Summary:")
+    (print "Lines\tMethod\t\t\t\tDuration(ms)\tLines/ms")
+    (print "-----\t------\t\t\t\t-----------\t--------")
+    (each [_ result (ipairs all-results)]
+      (print (string.format "%d\t%-20s\t\t%.3f\t\t%.1f" 
+               result.lines result.method result.duration-ms result.lines-per-ms)))
 
-    ;; Performance analysis
-    (let [largest (. results (length results))]
-      (print (string.format "\nPerformance Analysis:"))
-      (print (string.format "- Largest test: %d lines in %.3fms" largest.lines largest.duration-ms))
-      (if (> largest.lines-per-ms 10)
-          (print "✅ Performance: EXCELLENT (>10 lines/ms)")
-          (> largest.lines-per-ms 1)
-          (print "✅ Performance: GOOD (>1 line/ms)")
-          (> largest.lines-per-ms 0.1)
-          (print "⚠️  Performance: ACCEPTABLE (>0.1 lines/ms)")
-          (print "❌ Performance: POOR (<0.1 lines/ms) - Consider caching")))))
+    ;; Analysis
+    (print "\n🔍 Analysis:")
+    (print "- gg=G: Uses indentexpr line-by-line (cached, but still O(n²) scaling)")
+    (print "- gqG: Uses formatexpr range-based (should be much faster)")
+    (print "- Single-pass: Direct fix-indentation call (theoretical maximum)")
+    (print "\n💡 Recommendation: Use 'gqG' instead of 'gg=G' for whole-file formatting")))
 
 (main)
