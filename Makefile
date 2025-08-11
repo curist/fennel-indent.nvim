@@ -1,4 +1,4 @@
-.PHONY: test clean lint format preflight compile
+.PHONY: test clean lint format preflight compile benchmark
 .DEFAULT_GOAL := test
 
 FENNEL_VERSION = 1.5.3
@@ -22,6 +22,9 @@ format:
 
 compile: artifacts/test-runner.com
 	@$< tasks/compile-to-lua.fnl
+
+benchmark: artifacts/test-runner.com
+	@$< tasks/benchmark-realistic.fnl
 
 preflight: lint format test
 
