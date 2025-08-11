@@ -14,3 +14,7 @@ for _, sym in ipairs(symbols) do
   end
 end
 vim.bo.iskeyword = ik
+
+-- Set up fennel-indent
+vim.bo.indentexpr = 'v:lua.require("fennel-indent").indentexpr()'
+vim.bo.formatexpr = 'v:lua.require("fennel-indent").formatexpr()'
