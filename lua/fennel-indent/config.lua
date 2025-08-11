@@ -1,6 +1,6 @@
 -- Default configuration
 local default_config = {
-  semantic_alignment = { 'if', 'when', 'unless', 'case', 'match' }
+  semantic_alignment = { 'if', 'and', 'or', '..', '->', '->>', '-?>', '-?>>' }
 }
 
 -- Convert default semantic_alignment vector to set

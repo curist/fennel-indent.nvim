@@ -19,8 +19,8 @@ Zero-dependency Neovim plugin providing spec-compliant indentation for Fennel co
   'curist/fennel-indent.nvim',
   ft = 'fennel',
   opts = {
-    -- Optional: Configure semantic alignment
-    semantic_alignment = { 'if', 'when', 'unless', 'case', 'match' }
+    -- Optional: Configure semantic alignment (default shown)
+    semantic_alignment = { 'if', 'and', 'or', '..', '->', '->>', '-?>', '-?>>' }
   }
 }
 ```
@@ -33,7 +33,7 @@ use {
   ft = 'fennel',
   config = function()
     require('fennel-indent').setup({
-      semantic_alignment = { 'if', 'when', 'unless', 'case', 'match' }
+      semantic_alignment = { 'if', 'and', 'or', '..', '->', '->>', '-?>', '-?>>' }
     })
   end
 }
@@ -70,8 +70,8 @@ Both approaches produce identical, spec-compliant results.
 
 ```lua
 require('fennel-indent').setup({
-  -- Semantic alignment for multi-token forms (vector format)
-  semantic_alignment = { 'if', 'when', 'unless', 'case', 'match' }
+  -- Default semantic alignment for multi-token forms (vector format)
+  semantic_alignment = { 'if', 'and', 'or', '..', '->', '->>', '-?>', '-?>>' }
 })
 ```
 
@@ -85,10 +85,16 @@ With semantic alignment enabled:
     then-clause
     else-clause)
 
-;; ✅ Arguments align consistently  
-(when (and condition1
-           condition2)
-  body)
+;; ✅ Threading macros align consistently  
+(-> data
+    (map transform)
+    (filter predicate)
+    (reduce combine))
+
+;; ✅ Boolean operators align
+(and condition1
+     condition2
+     condition3)
 ```
 
 With semantic alignment disabled:
