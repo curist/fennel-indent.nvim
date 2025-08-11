@@ -1,22 +1,34 @@
 ;; Fennel indentation fixer following spec.md exactly
 ;; Simple, consistent, optional semantic alignment
 
+;; Pre-compiled patterns for performance
+(local leading-spaces-pattern "^( *)")
+(local whitespace-only-pattern "^%s*$")
+(local comment-start-pattern "^%s*;")
+(local trim-whitespace-pattern "^%s*")
+(local whitespace-char-pattern "%s")
+(local delimiter-pattern "[%s()%[%]{};\"]")
+
+;; Character lookup tables for O(1) checks
+(local closer-chars {")" true "]" true "}" true})
+(local opener-chars {"(" :list "[" :vector "{" :table "\"" :string})
+(local whitespace-chars {" " true "\t" true "\n" true "\r" true})
+
 (fn get-leading-spaces [line]
-  "Get count of leading spaces in line"
-  (let [spaces (string.match line "^( *)")]
+  "Get count of leading spaces in line - optimized with pre-compiled pattern"
+  (let [spaces (string.match line leading-spaces-pattern)]
     (length (or spaces ""))))
 
 (fn line-starts-with-closer? [line]
-  "Check if line starts with ), ], or }"
-  (let [t (string.gsub line "^%s*" "")]
-    (let [c (and (> (length t) 0) (string.sub t 1 1))]
-      (or (= c ")") (= c "]") (= c "}")))))
+  "Check if line starts with ), ], or } - optimized with pattern + lookup"
+  (let [trimmed (string.match line "^%s*(.*)")]
+    (and trimmed (> (length trimmed) 0)
+         (. closer-chars (string.sub trimmed 1 1)))))
 
 (fn comment-only-line? [line]
-  "Check if line contains only whitespace and/or comment"
-  (let [trimmed (string.gsub line "^%s*" "")]
-    (or (= trimmed "")
-        (string.match trimmed "^;"))))
+  "Check if line contains only whitespace and/or comment - optimized"
+  (or (string.match line whitespace-only-pattern)
+      (string.match line comment-start-pattern)))
 
 (fn pop-matching! [stack closer]
   "Pop the nearest frame of matching type for the closer"
@@ -43,6 +55,10 @@
                (= (. (. frame-stack (length frame-stack)) :type) :string))
       (set in-string true))
 
+    ; Early exit for comment-only lines
+    (when (comment-only-line? line)
+      (lua "return"))
+
     (while (<= i len)
       (let [char (string.sub line i i)]
         (if escape-next
@@ -58,8 +74,8 @@
                              (= (. (. frame-stack (length frame-stack)) :type) :string))
                     (table.remove frame-stack))))
             (= char ";")
-            ; Comment to end of line - stop processing
-            (set i (+ len 1))
+            ; Comment to end of line - stop processing early
+            (lua "break")
 
             ; Handle new frames with parent pointer tracking
             (let [parent (when (> (length frame-stack) 0)
@@ -83,20 +99,25 @@
                              :parent parent}]
                   ; Look for head symbol on same line
                   (var j (+ i 1))
-                  (while (and (<= j len) (string.match (string.sub line j j) "%s")) 
+                  (while (and (<= j len) (. whitespace-chars (string.sub line j j)))
                     (set j (+ j 1)))
                   (when (<= j len)
                     (let [head-start j]
                       (while (and (<= j len)
-                                  (not (string.match (string.sub line j j) "[%s()%[%]{};\"]")))
+                                  (let [c (string.sub line j j)]
+                                    (not (or (. whitespace-chars c)
+                                             (. opener-chars c)
+                                             (. closer-chars c)
+                                             (= c ";")
+                                             (= c "\"")))))
                         (set j (+ j 1)))
                       (when (> j head-start)
                         (set frame.head_symbol (string.sub line head-start (- j 1)))
                         (set frame.head_col (- head-start 1))
                         ; Look for first argument after head
-                        (while (and (<= j len) (string.match (string.sub line j j) "%s"))
+                        (while (and (<= j len) (. whitespace-chars (string.sub line j j)))
                           (set j (+ j 1)))
-                        (when (and (<= j len) (not (string.match (string.sub line j j) "[;]")))
+                        (when (and (<= j len) (not= (string.sub line j j) ";"))
                           (set frame.first_arg_col (- j 1))))))
                   (table.insert frame-stack frame))
                 (= char "[")
@@ -113,7 +134,7 @@
                    :open_col (- i 1)
                    :open_line line-num
                    :parent parent})
-                (or (= char ")") (= char "]") (= char "}"))
+                (. closer-chars char)
                 ; Pop matching frame by type
                 (pop-matching! frame-stack char))))
         (set i (+ i 1))))))
@@ -153,7 +174,7 @@
     (if
       ; 1. Line starts with closer → indent as if new child in that container
       (line-starts-with-closer? line)
-      (let [first (string.sub (string.gsub line "^%s*" "") 1 1)
+      (let [first (string.sub (string.match line "^%s*(.*)") 1 1)
             want (case first ")" :list "]" :vector "}" :table)]
         (var indent 0)
         (when want
