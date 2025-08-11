@@ -1,15 +1,16 @@
 # Neovim Fennel Indenter Implementation Plan
 
 ## Overview
-Create a Neovim indenter plugin that reuses the existing `scripts/indent-parser.fnl` to provide both whole-file and line-by-line indentation for Fennel code.
+Create a zero-dependency Neovim indenter plugin using `indentexpr` only. Compile existing `scripts/indent-parser.fnl` to Lua for a pure Lua plugin that works anywhere Neovim works.
 
 ## Architecture
 
-### Dual Approach Strategy
-Support both indentation methods for maximum performance and flexibility:
+### Simplified `indentexpr`-only Strategy
+Focus on single approach for simplicity and zero dependencies:
 
-1. **`equalprg` approach** - Whole-file/range processing
-2. **`indentexpr` approach** - Line-by-line processing
+1. **`indentexpr` approach** - Line-by-line processing with look-back context
+2. **Zero dependencies** - Compile Fennel to Lua at build time
+3. **Pure Lua plugin** - No external binaries or Fennel runtime required
 
 ### Core Components
 
@@ -18,104 +19,154 @@ Support both indentation methods for maximum performance and flexibility:
 - **Key functions**: `fix-indentation`, `tokenize-line`, `calculate-indent`
 - **Features**: Frame stack tracking, spec.md compliance, semantic alignment
 
-#### 2. New Components to Implement
+#### 2. Build System
+- **Compilation task**: `tasks/compile-to-lua.fnl` - Converts Fennel to Lua using test-runner.com
+- **Makefile integration**: `make compile` runs compilation task
+- **Output**: `artifacts/lua/indent-parser.lua` - Compiled pure Lua version
 
-##### A. `equalprg` Script
-- **Purpose**: Handle range-based indentation (e.g., `=5j`, `gg=G`, visual selections)
-- **Input**: Selected lines via stdin
-- **Output**: Formatted lines to stdout
-- **Context Strategy**: 
-  - For partial ranges: Assume first line's indentation is correct
-  - Infer initial frame stack state from first line's indent level
-  - Process remaining lines using inferred context
+#### 3. Plugin Components
 
-##### B. `indentexpr` Function  
+##### A. `indentexpr` Function  
 - **Purpose**: Real-time line-by-line indentation while typing
 - **API**: Lua function callable via `vim.bo.indentexpr`
-- **Context Strategy**: Look-back approach
-  - Read 15-20 previous lines from buffer
-  - Assume their indentation is correct
+- **Context Strategy**: Naive look-back approach (optimize later)
+  - Read all previous lines from buffer (line 1 to line_num-1)
   - Build frame stack from those lines
   - Calculate indent for current line
+- **Performance**: Start simple, add caching later if needed
 
-##### C. Neovim Plugin Structure
+##### B. Plugin Structure
 ```
 fennel-indent.nvim/
 ├── lua/
 │   └── fennel-indent/
-│       ├── init.lua          # Plugin entry point
-│       ├── equalprg.lua      # equalprg wrapper
-│       └── indentexpr.lua    # indentexpr function
-├── bin/
-│   └── fennel-equalprg       # Executable for equalprg
-└── scripts/
-    └── indent-parser.fnl     # Copied from existing project
+│       ├── init.lua          # Plugin entry point & setup
+│       ├── indent.lua        # Compiled from indent-parser.fnl
+│       └── indentexpr.lua    # indentexpr implementation
+├── ftplugin/
+│   └── fennel.lua           # Auto-enable for .fnl files
+└── README.md                # Installation & usage
 ```
 
 ## Implementation Details
 
-### `equalprg` Behavior
-- **Range handling**: `=` + motion sends only selected lines to stdin
-- **Context inference**: For partial ranges, assume first line represents correct base indentation level
-- **Algorithm**:
-  1. Parse first line to determine indentation level
-  2. Build plausible frame stack to explain that indentation
-  3. Process remaining lines normally
+### Build Process
+1. **Compilation**: `make compile` runs `tasks/compile-to-lua.fnl`
+2. **Task execution**: Uses `artifacts/test-runner.com` for Fennel environment
+3. **Output**: Pure Lua code in `artifacts/lua/indent-parser.lua`
 
 ### `indentexpr` Behavior  
 - **API requirement**: Function returns integer (desired indent level)
-- **Context building**: Look back 15-20 lines to build frame stack
+- **Context building**: Naive approach - process all previous lines (1 to line_num-1)
 - **Edge cases**: Handle start-of-file, incomplete context gracefully
-- **Performance**: Cache frame stack when possible
+- **Performance**: Start simple, optimize later with caching if needed
 
 ### Neovim API Integration
 ```lua
--- Setting up the indenter
-vim.bo.equalprg = 'fennel-equalprg'
+-- Setting up the indenter (in ftplugin/fennel.lua)
+-- Disable competing indentation systems
+vim.bo.lisp = false
+vim.bo.smartindent = false
+vim.bo.cindent = false
+vim.bo.autoindent = true  -- Keep for basic functionality
+
+-- Set up our custom indenter
 vim.bo.indentexpr = 'v:lua.require("fennel-indent").indentexpr()'
 vim.bo.indentkeys = '0{,0},0),0],!^F,o,O,e,;'
 ```
 
+### Installation (Lazy.nvim)
+```lua
+{
+  'user/fennel-indent.nvim',
+  ft = 'fennel',
+  config = function()
+    require('fennel-indent').setup({
+      semantic_alignment = { if = true, when = true }
+    })
+  end
+}
+```
+
 ## Benefits
 
-### Performance Optimization
-- **Whole-file operations** (`gg=G`): Use `equalprg` for maximum accuracy with full context
-- **Interactive editing**: Use `indentexpr` for responsive line-by-line indenting
-- **Best of both worlds**: User gets optimal performance for different scenarios
+### Zero Dependencies
+- **Pure Lua**: No Fennel runtime required at installation time
+- **No binaries**: No external executables or `$PATH` concerns
+- **Universal compatibility**: Works anywhere Neovim works
 
-### Accuracy
-- **Full context**: `equalprg` can build complete frame stack for accurate indentation
-- **Reasonable approximation**: `indentexpr` uses look-back for good-enough accuracy
-- **Spec compliance**: Both approaches leverage the same spec.md-compliant core logic
+### Simplified Distribution
+- **Standard plugin**: Works with any plugin manager (Lazy, Packer, etc.)
+- **Easy installation**: Just add to plugin config, no additional setup
+- **Spec compliance**: Maintains full spec.md-compliant indentation logic
 
 ## Technical Challenges
 
-### Context Limitations
-- **`equalprg`**: May receive partial file content, need to infer context
-- **`indentexpr`**: Single-line context, need to reconstruct surrounding state
-- **Solution**: Intelligent context inference and look-back strategies
+### Performance Considerations
+- **Naive implementation**: Processing all previous lines for each indent call
+- **Potential bottleneck**: Large files with many indentation calls
+- **Solution**: Start simple, add line-content-based caching if needed
 
-### State Management
-- **Frame stack consistency**: Ensure both approaches produce similar results
-- **Caching**: Optimize `indentexpr` performance with intelligent caching
-- **Edge cases**: Handle incomplete code, syntax errors gracefully
+### Context Building
+- **Look-back strategy**: Build frame stack from all previous lines
+- **Edge cases**: Handle start-of-file, incomplete code, syntax errors gracefully
+- **Accuracy**: Maintain spec compliance with simplified approach
 
 ## Testing Strategy
-- **Unit tests**: Test context inference logic
-- **Integration tests**: Compare `equalprg` vs `indentexpr` results
-- **Real-world scenarios**: Test with complex Fennel codebases
-- **Performance tests**: Measure response time for large files
 
-## Installation & Usage
-- **Plugin manager**: Compatible with lazy.nvim, packer.nvim, etc.
-- **File type detection**: Auto-enable for `.fnl` files
-- **Configuration**: Optional semantic alignment settings
-- **Fallback**: Graceful degradation if Fennel runtime unavailable
+### Unit Tests (Existing)
+- **Unit tests**: 19 existing tests in `test/indent-parser_test.fnl` validate core parser logic
+- **Spec compliance**: Tests cover all indentation rules from `specs/fennel-indent-parser.md`
+
+### Integration Tests (New)
+- **Headless Neovim**: Test actual plugin behavior using `nvim --headless`
+- **Integration helper**: `test/integration_helper.fnl` with temp file management
+  ```fennel
+  ;; Helper creates temp files, runs headless nvim, captures results
+  (test-indentexpr-with-nvim input expected)
+  ```
+- **Parallel tests**: Each existing unit test gets integration equivalent
+- **Real environment**: Tests compiled Lua plugin in actual Neovim with proper setup
+
+### Test Implementation
+```fennel
+;; test/integration_test.fnl
+{:test-integration-top-level-zero
+ (fn []
+   (testing "headless nvim matches fix-indentation results"
+     #(let [input "  foo\n  (bar)"
+            expected "foo\n(bar)"  
+            result (helper.test-indentexpr-with-nvim input expected)]
+        (assert.= expected result))))
+        
+ :test-integration-list-closer-base
+ (fn []
+   (testing "list closer alignment via indentexpr"
+     #(let [input "(foo\n  x\n  y\n)"
+            expected "(foo\n  x\n  y\n  )"
+            result (helper.test-indentexpr-with-nvim input expected)]
+        (assert.= expected result))))}
+```
+
+### Performance & Edge Cases
+- **Performance measurement**: Profile naive implementation on large files
+- **Edge case handling**: Test start-of-file, syntax errors, incomplete context
+- **Consistency validation**: Ensure line-by-line indentexpr matches whole-file results
+
+## Development Workflow
+1. **Create compilation task**: `tasks/compile-to-lua.fnl`
+2. **Add Makefile rule**: `make compile` for easy building
+3. **Implement naive indentexpr**: Simple, correct, unoptimized
+4. **Create integration test framework**: `test/integration_helper.fnl` + headless nvim setup
+5. **Test against unit tests**: Unit tests for core logic
+6. **Test integration**: Parallel integration tests using headless nvim
+7. **Profile performance**: Identify real bottlenecks if needed
+8. **Add caching if needed**: Only after measuring actual performance
 
 ## Success Criteria
-1. ✅ Reuse existing `indent-parser.fnl` logic
-2. ✅ Support both `equalprg` and `indentexpr` approaches
-3. ✅ Handle partial context gracefully
+1. ✅ Reuse existing `indent-parser.fnl` logic via compilation
+2. ✅ Zero-dependency pure Lua plugin
+3. ✅ Handle context gracefully with look-back strategy
 4. ✅ Maintain spec.md compliance
-5. ✅ Good performance for interactive editing
-6. ✅ Accurate results for whole-file formatting
+5. ✅ Lazy.nvim compatibility with proper setup function
+6. ✅ Auto-enable for `.fnl` files
