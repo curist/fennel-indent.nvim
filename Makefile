@@ -2,7 +2,7 @@
 .DEFAULT_GOAL := test
 
 FENNEL_VERSION = 1.5.3
-TEST_RUNNER_URL = https://github.com/curist/test-runner.com/releases/download/v0.1.2/test-runner.com
+TEST_RUNNER_URL = https://github.com/curist/test-runner.com/releases/download/v0.1.3/test-runner.com
 
 artifacts/test-runner.com:
 	wget -O $@ ${TEST_RUNNER_URL}
