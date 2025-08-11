@@ -90,7 +90,7 @@
   "Benchmark our fix-indentation function directly (theoretical best case)"
   (let [content (generate-realistic-file file-size)
         indent-parser (require :scripts.indent-parser)]
-    
+
     (let [timing (time-operation 
                    (fn []
                      (indent-parser.fix-indentation content {})))]
@@ -110,27 +110,27 @@
 
     (each [_ size (ipairs sizes)]
       (print (.. "\n📏 Testing " size " lines:"))
-      
+
       ;; Test gg=G (indentexpr)
       (print "  Testing gg=G (indentexpr)...")
       (let [gg-result (benchmark-gg-equal-g size)]
         (table.insert all-results gg-result)
         (print (string.format "    Duration: %.3fms, Lines/ms: %.1f" 
-               gg-result.duration-ms gg-result.lines-per-ms)))
-      
+                 gg-result.duration-ms gg-result.lines-per-ms)))
+
       ;; Test gqG (formatexpr) 
       (print "  Testing gqG (formatexpr)...")
       (let [gq-result (benchmark-gq-g size)]
         (table.insert all-results gq-result)
         (print (string.format "    Duration: %.3fms, Lines/ms: %.1f" 
-               gq-result.duration-ms gq-result.lines-per-ms)))
-      
+                 gq-result.duration-ms gq-result.lines-per-ms)))
+
       ;; Test single-pass (theoretical best)
       (print "  Testing single-pass (fix-indentation)...")
       (let [sp-result (benchmark-single-pass size)]
         (table.insert all-results sp-result)
         (print (string.format "    Duration: %.3fms, Lines/ms: %.1f" 
-               sp-result.duration-ms sp-result.lines-per-ms))))
+                 sp-result.duration-ms sp-result.lines-per-ms))))
 
     ;; Summary table
     (print "\n📊 Performance Summary:")
