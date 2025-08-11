@@ -24,4 +24,29 @@
    (testing "headless nvim indentexpr matches fix-indentation for table anchor"
      #(let [expected (helper.read-expected "table-anchor")
             result (helper.test-indentexpr-with-nvim "table-anchor")]
+        (assert.= expected result))))
+
+ ;; formatexpr integration tests
+ :test-formatexpr-top-level-zero
+ (fn []
+   "Integration: formatexpr correctly formats top-level forms"
+   (testing "formatexpr handles top-level zero indentation via gq"
+     #(let [expected (helper.read-expected "top-level-zero") 
+            result (helper.test-formatexpr-with-nvim "top-level-zero")]
+        (assert.= expected result))))
+
+ :test-formatexpr-list-closer-base
+ (fn []
+   "Integration: formatexpr correctly formats list closers" 
+   (testing "formatexpr handles list closer base alignment via gq"
+     #(let [expected (helper.read-expected "list-closer-base")
+            result (helper.test-formatexpr-with-nvim "list-closer-base")]
+        (assert.= expected result))))
+
+ :test-formatexpr-table-anchor
+ (fn []
+   "Integration: formatexpr correctly formats table anchoring"
+   (testing "formatexpr handles table anchor alignment via gq" 
+     #(let [expected (helper.read-expected "table-anchor")
+            result (helper.test-formatexpr-with-nvim "table-anchor")]
         (assert.= expected result))))}

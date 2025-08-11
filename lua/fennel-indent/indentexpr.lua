@@ -1,23 +1,5 @@
 -- Load the compiled indent parser
-local function find_project_root()
-  -- Start from this file's directory and walk up to find project root
-  local current = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h")
-  while current ~= "/" do
-    local makefile = current .. "/Makefile"
-    if vim.fn.filereadable(makefile) == 1 then
-      return current
-    end
-    current = vim.fn.fnamemodify(current, ":h")
-  end
-  return nil
-end
-
-local project_root = find_project_root()
-if not project_root then
-  error("Could not find project root (looking for Makefile)")
-end
-
-local indent_parser = dofile(project_root .. "/artifacts/lua/indent-parser.lua")
+local indent_parser = require("fennel-indent.indent-parser")
 
 local function indentexpr(line_num)
   -- Handle edge case: first line

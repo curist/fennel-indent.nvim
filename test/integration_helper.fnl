@@ -72,6 +72,26 @@ vim.api.nvim_buf_set_lines(0, 0, -1, false, result_lines)"
         (string.gsub result "\n$" "")
         "")))
 
+(fn M.test-formatexpr-with-nvim [test-name]
+  "Test formatexpr with headless nvim using fixture files and gq command"
+  (let [input-content (read-fixture (.. test-name "/input.fnl"))
+        temp-file (create-temp-file input-content)
+        init-file "test/minimal_init.lua"
+        nvim-cmd (string.format 
+                   "nvim --headless -u %s %s -c 'set ft=fennel' -c 'normal! ggVGgq' -c 'write' -c 'quit' 2>/dev/null"
+                   init-file temp-file)
+        ;; Execute nvim command  
+        handle (io.popen nvim-cmd)
+        _ (handle:close)
+        ;; Read the result
+        result (read-file temp-file)]
+    ;; Clean up temp file
+    (os.remove temp-file)
+    ;; Return result, handle nil case
+    (if result
+        (string.gsub result "\n$" "")
+        "")))
+
 (fn M.read-expected [test-name]
   "Read expected output for a test case"
   (let [content (read-fixture (.. test-name "/expected.fnl"))]

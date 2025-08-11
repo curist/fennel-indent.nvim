@@ -4,9 +4,9 @@
 (local fennel (require :fennel))
 
 (fn compile-indent-parser []
-  "Compile scripts/indent-parser.fnl to artifacts/lua/indent-parser.lua"
+  "Compile scripts/indent-parser.fnl to lua/fennel-indent/indent-parser.lua"
   (let [input-path "scripts/indent-parser.fnl"
-        output-dir "artifacts/lua"
+        output-dir "lua/fennel-indent"
         output-path (.. output-dir "/indent-parser.lua")]
     
     ;; Ensure output directory exists

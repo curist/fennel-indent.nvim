@@ -1,8 +1,8 @@
 -- Minimal init.lua for headless nvim integration testing
 -- Sets up our fennel-indent plugin with basic configuration
 
--- Add our plugin to the runtime path
-local plugin_path = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h:h") .. "/fennel-indent.nvim"
+-- Add our plugin to the runtime path (this repo root)
+local plugin_path = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h:h")
 vim.opt.runtimepath:prepend(plugin_path)
 
 -- Set up the plugin with default config

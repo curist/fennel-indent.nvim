@@ -8,4 +8,8 @@ function M.indentexpr()
   return require("fennel-indent.indentexpr")(vim.v.lnum)
 end
 
+function M.formatexpr()
+  return require("fennel-indent.formatexpr")()
+end
+
 return M
