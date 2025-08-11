@@ -223,6 +223,15 @@ The project follows strict TDD methodology with comprehensive test coverage:
 3. All changes must pass the complete test suite
 4. Maintain spec compliance with `specs/fennel-indent-parser.md`
 
+## AI / LLM Usage
+
+This project was developed with assistance from large language models (LLMs).
+LLMs were used to help with:
+
+* Drafting and iterating on code implementations
+* Generating boilerplate and repetitive structures
+* Refining documentation and comments
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
