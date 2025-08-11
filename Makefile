@@ -5,6 +5,7 @@ FENNEL_VERSION = 1.5.3
 TEST_RUNNER_URL = https://github.com/curist/test-runner.com/releases/download/v0.1.3/test-runner.com
 
 artifacts/test-runner.com:
+	mkdir -p artifacts
 	wget -O $@ ${TEST_RUNNER_URL}
 	chmod +x $@
 
