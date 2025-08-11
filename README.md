@@ -1,14 +1,6 @@
 # fennel-indent.nvim
 
-Zero-dependency Neovim plugin providing spec-compliant indentation for Fennel code using both `indentexpr` and `formatexpr`.
-
-## Features
-
-- **✅ Spec-compliant**: Implements the complete [Fennel indentation specification](specs/fennel-indent-parser.md)
-- **🚀 Zero dependencies**: Pure Lua plugin, no Fennel runtime or external binaries required
-- **⚡ High performance**: Optimized caching system with 3x performance improvement
-- **🔧 Dual approach**: Both line-by-line (`indentexpr`) and format commands (`formatexpr`)
-- **🎯 Works everywhere**: Compatible with any Neovim installation and plugin manager
+Neovim indent plugin for Fennel code using both `indentexpr` and `formatexpr`.
 
 ## Installation
 
@@ -23,26 +15,6 @@ Zero-dependency Neovim plugin providing spec-compliant indentation for Fennel co
     semantic_alignment = { 'if', 'and', 'or', '..', '->', '->>', '-?>', '-?>>' }
   }
 }
-```
-
-### Packer
-
-```lua
-use {
-  'curist/fennel-indent.nvim',
-  ft = 'fennel',
-  config = function()
-    require('fennel-indent').setup({
-      semantic_alignment = { 'if', 'and', 'or', '..', '->', '->>', '-?>', '-?>>' }
-    })
-  end
-}
-```
-
-### Manual Installation
-
-```bash
-git clone https://github.com/curist/fennel-indent.nvim ~/.config/nvim/pack/plugins/start/fennel-indent.nvim
 ```
 
 ## Usage
@@ -61,8 +33,6 @@ The plugin automatically enables for `.fnl` files. Both approaches work seamless
 - **`gq`**: Format selection or motion
 - **`gqG`**: Format entire file (recommended for large files - up to 333x faster than `gg=G`)
 - **`gqap`**: Format around paragraph
-
-Both approaches produce identical, spec-compliant results.
 
 ## Configuration
 
@@ -109,16 +79,6 @@ With semantic alignment disabled:
 ## Indentation Rules
 
 The plugin implements comprehensive indentation rules:
-
-### Lists
-```fennel
-(function-name arg1
-               arg2)  ; Arguments align to first arg
-
-(f                    ; Long function names use structural indent
-  arg1
-  arg2)
-```
 
 ### Tables & Vectors
 ```fennel
@@ -195,9 +155,9 @@ Real-world benchmarks comparing different formatting approaches:
 ### Testing
 
 ```bash
-make test          # Run all tests (19 unit + 6 integration)
+make test          # Run all tests
 make lint          # Lint Fennel files
-make preflight     # Run lint + test (pre-commit workflow)
+make preflight     # Run lint + test
 ```
 
 ### Build System
