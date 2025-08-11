@@ -45,6 +45,29 @@ require('fennel-indent').setup({
 })
 ```
 
+### Recommend mappings
+
+```vim
+augroup fennel_format_map
+  autocmd!
+  autocmd FileType fennel nnoremap <buffer> = gq
+  autocmd FileType fennel xnoremap <buffer> = gq
+  autocmd FileType fennel nnoremap <buffer> == gqq
+augroup END
+```
+
+or
+
+```lua
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "fennel",
+  callback = function()
+    vim.keymap.set({"n", "x"}, "=", "gq", { buffer = true })
+    vim.keymap.set("n", "==", "gqq", { buffer = true })
+  end,
+})
+```
+
 ### Semantic Alignment Examples
 
 With semantic alignment enabled:
