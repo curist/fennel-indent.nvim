@@ -178,7 +178,32 @@ vim.bo.indentkeys = '0{,0},0),0],!^F,o,O,e,;'
   - ✅ `test/minimal_init.lua` - Neovim init for headless testing with plugin setup
   - ✅ `test/apply_indent.lua` - Direct indentation application via lua (bypasses `=` command issues)
   - ✅ Individual integration tests pass and match unit test results
-  - ⚠️ **Known Issue**: Multi-test runs have timing/state conflicts (individual tests work correctly)
+  - ✅ Fixed: Multi-test timing/state conflicts resolved with `os.tmpname()` 
+  - ⚠️ **Critical Known Limitation**: `gg=G` formatting commands have inconsistent behavior due to Neovim/Vim core issue
+
+## Known Issues & Limitations
+
+### `gg=G` and Formatting Command Inconsistency
+
+**Issue**: The `=` (format) command in Neovim has inconsistent behavior with custom `indentexpr` functions.
+
+**Root Cause**: During formatting operations like `gg=G`, Neovim's `getline()` function returns modified/joined line content in intermediate states, causing `vim.api.nvim_buf_get_lines()` calls within our `indentexpr` to see different content than expected. This is a documented limitation affecting both Vim and Neovim (Issues: [vim#951](https://github.com/vim/vim/issues/951), [neovim#5123](https://github.com/neovim/neovim/issues/5123)).
+
+**Impact**: 
+- `indentexpr` works correctly for single-line indentation (Insert mode, `==`, etc.)
+- `gg=G` may produce inconsistent results due to intermediate line state during formatting
+- Integration tests use direct Lua indentation application to avoid this core limitation
+
+**Current Status**: Working around limitation - plugin functions correctly for normal indentation use cases
+
+### Phase 2.5: formatexpr Implementation (HIGH PRIORITY)
+**NEXT TODO**: Implement `formatexpr` in addition to `indentexpr` to provide reliable `gq`/`gg=G` support
+- [ ] **Research formatexpr API**: Understand formatexpr vs indentexpr differences and implementation requirements  
+- [ ] **Implement formatexpr function**: Create `fennel-indent.nvim/lua/fennel-indent/formatexpr.lua`
+- [ ] **Integrate with plugin**: Set both `indentexpr` and `formatexpr` in `ftplugin/fennel.lua`
+- [ ] **Test formatexpr with gg=G**: Verify formatting commands work reliably
+- [ ] **Update integration tests**: Test both indentexpr and formatexpr approaches
+- [ ] **Document formatexpr usage**: Add to plugin README and configuration guide
 
 ### Phase 3: Validation & Polish
 - [ ] **Test against unit tests**: Unit tests for core logic
