@@ -1,8 +1,8 @@
-.PHONY: test clean lint format preflight
+.PHONY: test clean lint format preflight compile
 .DEFAULT_GOAL := test
 
 FENNEL_VERSION = 1.5.3
-TEST_RUNNER_URL = https://github.com/curist/test-runner.com/releases/download/v0.1.1/test-runner.com
+TEST_RUNNER_URL = https://github.com/curist/test-runner.com/releases/download/v0.1.2/test-runner.com
 
 artifacts/test-runner.com:
 	wget -O $@ ${TEST_RUNNER_URL}
@@ -19,6 +19,9 @@ lint:
 
 format:
 	@fennel scripts/format-files.fnl $$(find . -iname "*.fnl" -not -path "./artifacts/*" -type f)
+
+compile: artifacts/test-runner.com
+	@$< tasks/compile-to-lua.fnl
 
 preflight: lint format test
 
