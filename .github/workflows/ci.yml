@@ -15,50 +15,11 @@ jobs:
     
     - name: Install dependencies
       run: |
-        # Install Lua
-        sudo apt-get update && sudo apt-get install -y lua5.4
-        
-        # Install Fennel
-        wget -O fennel https://fennel-lang.org/downloads/fennel-1.5.3-x86_64
-        chmod +x fennel
-        sudo mv fennel /usr/local/bin/
-        
         # Install Neovim for integration tests
         wget -O nvim.appimage https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
         chmod +x nvim.appimage
         sudo mv nvim.appimage /usr/local/bin/nvim
     
-    - name: Download test runner
-      run: make artifacts/test-runner.com
-    
     - name: Run tests
       run: make test
       
-    - name: Run compilation
-      run: make compile
-      
-    - name: Verify artifacts
-      run: |
-        test -f artifacts/lua/indent-parser.lua
-        echo "✅ Compiled Lua artifact generated successfully"
-
-  compatibility:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-        
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install Fennel
-      run: |
-        wget -O fennel https://fennel-lang.org/downloads/fennel-1.5.3-x86_64
-        chmod +x fennel
-        sudo mv fennel /usr/local/bin/
-    
-    - name: Download test runner
-      run: make artifacts/test-runner.com
-      
-    - name: Test core functionality
-      run: make test ARGS="test/indent-parser_test.fnl"

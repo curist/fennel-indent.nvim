@@ -1,15 +1,22 @@
+local leading_spaces_pattern = "^( *)"
+local whitespace_only_pattern = "^%s*$"
+local comment_start_pattern = "^%s*;"
+local trim_whitespace_pattern = "^%s*"
+local whitespace_char_pattern = "%s"
+local delimiter_pattern = "[%s()%[%]{};\"]"
+local closer_chars = {[")"] = true, ["]"] = true, ["}"] = true}
+local opener_chars = {["("] = "list", ["["] = "vector", ["{"] = "table", ["\""] = "string"}
+local whitespace_chars = {[" "] = true, ["\9"] = true, ["\n"] = true, ["\r"] = true}
 local function get_leading_spaces(line)
-  local spaces = string.match(line, "^( *)")
+  local spaces = string.match(line, leading_spaces_pattern)
   return #(spaces or "")
 end
 local function line_starts_with_closer_3f(line)
-  local t = string.gsub(line, "^%s*", "")
-  local c = ((#t > 0) and string.sub(t, 1, 1))
-  return ((c == ")") or (c == "]") or (c == "}"))
+  local trimmed = string.match(line, "^%s*(.*)")
+  return (trimmed and (#trimmed > 0) and closer_chars[string.sub(trimmed, 1, 1)])
 end
 local function comment_only_line_3f(line)
-  local trimmed = string.gsub(line, "^%s*", "")
-  return ((trimmed == "") or string.match(trimmed, "^;"))
+  return (string.match(line, whitespace_only_pattern) or string.match(line, comment_start_pattern))
 end
 local function pop_matching_21(stack, closer)
   local want
@@ -46,6 +53,10 @@ local function tokenize_line(line, line_num, frame_stack)
     in_string = true
   else
   end
+  if comment_only_line_3f(line) then
+    return
+  else
+  end
   while (i <= len) do
     local char = string.sub(line, i, i)
     if escape_next then
@@ -62,7 +73,7 @@ local function tokenize_line(line, line_num, frame_stack)
       else
       end
     elseif (char == ";") then
-      i = (len + 1)
+      break
     else
       local parent
       if (#frame_stack > 0) then
@@ -76,21 +87,27 @@ local function tokenize_line(line, line_num, frame_stack)
       elseif (char == "(") then
         local frame = {type = "list", indent = current_indent, open_col = (i - 1), open_line = line_num, parent = parent}
         local j = (i + 1)
-        while ((j <= len) and string.match(string.sub(line, j, j), "%s")) do
+        while ((j <= len) and whitespace_chars[string.sub(line, j, j)]) do
           j = (j + 1)
         end
         if (j <= len) then
           local head_start = j
-          while ((j <= len) and not string.match(string.sub(line, j, j), "[%s()%[%]{};\"]")) do
+          while true do
+            local and_9_ = (j <= len)
+            if and_9_ then
+              local c = string.sub(line, j, j)
+              and_9_ = not (whitespace_chars[c] or opener_chars[c] or closer_chars[c] or (c == ";") or (c == "\""))
+            end
+            if not and_9_ then break end
             j = (j + 1)
           end
           if (j > head_start) then
             frame.head_symbol = string.sub(line, head_start, (j - 1))
             frame.head_col = (head_start - 1)
-            while ((j <= len) and string.match(string.sub(line, j, j), "%s")) do
+            while ((j <= len) and whitespace_chars[string.sub(line, j, j)]) do
               j = (j + 1)
             end
-            if ((j <= len) and not string.match(string.sub(line, j, j), "[;]")) then
+            if ((j <= len) and (string.sub(line, j, j) ~= ";")) then
               frame.first_arg_col = (j - 1)
             else
             end
@@ -103,7 +120,7 @@ local function tokenize_line(line, line_num, frame_stack)
         table.insert(frame_stack, {type = "vector", indent = current_indent, open_col = (i - 1), open_line = line_num, parent = parent})
       elseif (char == "{") then
         table.insert(frame_stack, {type = "table", indent = current_indent, open_col = (i - 1), open_line = line_num, parent = parent})
-      elseif ((char == ")") or (char == "]") or (char == "}")) then
+      elseif closer_chars[char] then
         pop_matching_21(frame_stack, char)
       else
       end
@@ -158,7 +175,7 @@ local function calculate_indent(line, line_num, frame_stack, align_heads)
     top_frame = nil
   end
   if line_starts_with_closer_3f(line) then
-    local first = string.sub(string.gsub(line, "^%s*", ""), 1, 1)
+    local first = string.sub(string.match(line, "^%s*(.*)"), 1, 1)
     local want
     if (first == ")") then
       want = "list"

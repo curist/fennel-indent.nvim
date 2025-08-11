@@ -9,9 +9,6 @@ artifacts/test-runner.com:
 	wget -O $@ ${TEST_RUNNER_URL}
 	chmod +x $@
 
-test: artifacts/test-runner.com
-	@$< $(ARGS)
-
 clean:
 	rm artifacts/*
 
@@ -20,6 +17,9 @@ format:
 
 compile: artifacts/test-runner.com
 	@$< tasks/compile-to-lua.fnl
+
+test: artifacts/test-runner.com compile
+	@$< $(ARGS)
 
 benchmark: artifacts/test-runner.com
 	@$< tasks/benchmark-realistic.fnl
