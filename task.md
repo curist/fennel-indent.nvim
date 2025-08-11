@@ -107,10 +107,12 @@ vim.bo.indentkeys = '0{,0},0),0],!^F,o,O,e,;'
 - **Potential bottleneck**: Large files with many indentation calls
 - **Solution**: Start simple, add line-content-based caching if needed
 
-### Context Building
-- **Look-back strategy**: Build frame stack from all previous lines
-- **Edge cases**: Handle start-of-file, incomplete code, syntax errors gracefully
-- **Accuracy**: Maintain spec compliance with simplified approach
+### Context Building & Error Handling (Per Spec Lines 129-135)
+- **Malformed/unclosed containers**: Build delimiter stack by scanning up to target line, treat current stack as authoritative
+- **Inside unclosed container**: Apply container's rule (list base, vector/table anchor, string_anchor; continuation if eligible)  
+- **Closer-only line with no matching opener**: Indent as top level = 0
+- **Unclosed multiline string**: Continue using string_anchor for all subsequent lines until closed
+- **Look-back strategy**: Build frame stack from all previous lines gracefully handling incomplete context
 
 ## Testing Strategy
 
@@ -154,14 +156,23 @@ vim.bo.indentkeys = '0{,0},0),0],!^F,o,O,e,;'
 - **Consistency validation**: Ensure line-by-line indentexpr matches whole-file results
 
 ## Development Workflow
-1. **Create compilation task**: `tasks/compile-to-lua.fnl`
-2. **Add Makefile rule**: `make compile` for easy building
-3. **Implement naive indentexpr**: Simple, correct, unoptimized
-4. **Create integration test framework**: `test/integration_helper.fnl` + headless nvim setup
-5. **Test against unit tests**: Unit tests for core logic
-6. **Test integration**: Parallel integration tests using headless nvim
-7. **Profile performance**: Identify real bottlenecks if needed
-8. **Add caching if needed**: Only after measuring actual performance
+
+### Phase 1: Foundation
+- [ ] **Create compilation task**: `tasks/compile-to-lua.fnl` - Define exact Fennel-to-Lua conversion process
+- [ ] **Add Makefile rule**: `make compile` for easy building
+- [ ] **Define Plugin API Reference**: Function signatures and return types for indentexpr interface
+- [ ] **Create plugin directory structure**: Exact file paths and module exports in `fennel-indent.nvim/`
+
+### Phase 2: Core Implementation  
+- [ ] **Implement naive indentexpr**: Simple, correct, unoptimized line-by-line processor
+- [ ] **Add error handling**: Handle malformed/unclosed code per spec (lines 129-135 in specs/)
+- [ ] **Create integration test framework**: `test/integration_helper.fnl` + headless nvim setup with temp file patterns
+
+### Phase 3: Validation & Polish
+- [ ] **Test against unit tests**: Unit tests for core logic
+- [ ] **Test integration**: Parallel integration tests using headless nvim  
+- [ ] **Profile performance**: Identify real bottlenecks if needed with specific benchmarking methodology
+- [ ] **Add caching if needed**: Only after measuring actual performance
 
 ## Success Criteria
 1. ✅ Reuse existing `indent-parser.fnl` logic via compilation
