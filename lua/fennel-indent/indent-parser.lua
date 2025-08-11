@@ -1,9 +1,6 @@
 local leading_spaces_pattern = "^( *)"
 local whitespace_only_pattern = "^%s*$"
 local comment_start_pattern = "^%s*;"
-local trim_whitespace_pattern = "^%s*"
-local whitespace_char_pattern = "%s"
-local delimiter_pattern = "[%s()%[%]{};\"]"
 local closer_chars = {[")"] = true, ["]"] = true, ["}"] = true}
 local opener_chars = {["("] = "list", ["["] = "vector", ["{"] = "table", ["\""] = "string"}
 local whitespace_chars = {[" "] = true, ["\9"] = true, ["\n"] = true, ["\r"] = true}

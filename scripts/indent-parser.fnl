@@ -5,9 +5,6 @@
 (local leading-spaces-pattern "^( *)")
 (local whitespace-only-pattern "^%s*$")
 (local comment-start-pattern "^%s*;")
-(local trim-whitespace-pattern "^%s*")
-(local whitespace-char-pattern "%s")
-(local delimiter-pattern "[%s()%[%]{};\"]")
 
 ;; Character lookup tables for O(1) checks
 (local closer-chars {")" true "]" true "}" true})
