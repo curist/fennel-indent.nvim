@@ -33,6 +33,21 @@ Fennel indentation parser with comprehensive testing. Core parser in `scripts/in
 - **`test/indent-parser_test.fnl`** - 19 unit tests implementing the spec
 - **`task.md`** - Neovim plugin implementation roadmap (equalprg + indentexpr approaches)
 
+## Commit Message Style
+
+**Preferred Format (keep concise):**
+```
+Short descriptive title
+
+Brief 1-2 sentence explanation of what and why, if needed.
+```
+
+**Guidelines:**
+- Keep commit messages concise and focused
+- If you find yourself writing long lists of changes, consider breaking into multiple commits
+- Focus on the "what" and "why", not exhaustive "how" details
+- Use present tense ("Add feature" not "Added feature")
+
 ## Architecture Notes
 
 - **Frame Stack**: Tracks nested contexts (:list, :vector, :table, :string) with parent relationships
