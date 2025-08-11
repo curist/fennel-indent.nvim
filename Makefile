@@ -10,17 +10,18 @@ artifacts/test-runner.com:
 	chmod +x $@
 
 clean:
-	rm artifacts/*
+	rm -f artifacts/* lua/fennel-indent/indent-parser.lua
 
 format:
 	@fennel scripts/format-files.fnl $$(find . -iname "*.fnl" -not -path "./artifacts/*" -not -path "./test/fixtures/*" -type f)
 
-compile: artifacts/test-runner.com
+compile: lua/fennel-indent/indent-parser.lua
+
+lua/fennel-indent/indent-parser.lua: artifacts/test-runner.com scripts/indent-parser.fnl tasks/compile-to-lua.fnl
 	@$< tasks/compile-to-lua.fnl
 
-test: artifacts/test-runner.com compile
+test: artifacts/test-runner.com lua/fennel-indent/indent-parser.lua
 	@$< $(ARGS)
 
 benchmark: artifacts/test-runner.com
 	@$< tasks/benchmark-realistic.fnl
-
