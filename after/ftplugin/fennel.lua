@@ -5,7 +5,7 @@ vim.bo.cindent = false
 vim.bo.autoindent = true
 
 -- since we are setting nolisp, let's add some keyword chars back
-local symbols = { "-", "?", "!" }
+local symbols = { "-", "?", "!", "&", "=", ">", "<" }
 local ik = vim.bo.iskeyword
 for _, sym in ipairs(symbols) do
   -- match only if symbol exists as a whole item
