@@ -163,10 +163,22 @@ vim.bo.indentkeys = '0{,0},0),0],!^F,o,O,e,;'
 - [x] **Define Plugin API Reference**: Function signatures and return types for indentexpr interface
 - [x] **Create plugin directory structure**: Exact file paths and module exports in `fennel-indent.nvim/`
 
-### Phase 2: Core Implementation  
-- [ ] **Implement naive indentexpr**: Simple, correct, unoptimized line-by-line processor
-- [ ] **Add error handling**: Handle malformed/unclosed code per spec (lines 129-135 in specs/)
-- [ ] **Create integration test framework**: `test/integration_helper.fnl` + headless nvim setup with temp file patterns
+### Phase 2: Core Implementation ✅ COMPLETE
+- [x] **Implement naive indentexpr**: Simple, correct, unoptimized line-by-line processor
+  - ✅ `fennel-indent.nvim/lua/fennel-indent/indentexpr.lua` - Core indentexpr implementation
+  - ✅ Loads compiled `artifacts/lua/indent-parser.lua` with path resolution
+  - ✅ Line-by-line processing with frame stack building from previous lines
+  - ✅ Error handling with pcall fallback to 0 indent
+- [x] **Add error handling**: Handle malformed/unclosed code per spec (lines 129-135 in specs/)
+  - ✅ All error cases handled by existing compiled logic (closer-only lines, unclosed containers, etc.)
+  - ✅ Graceful fallback on any errors via pcall wrapper
+- [x] **Create integration test framework**: `test/integration_helper.fnl` + headless nvim setup with temp file patterns
+  - ✅ `test/integration_helper.fnl` - Fixture-based testing with `rb.slurp` and temp files
+  - ✅ `test/fixtures/` - Input/expected pairs for test cases (top-level-zero, list-closer-base, table-anchor)
+  - ✅ `test/minimal_init.lua` - Neovim init for headless testing with plugin setup
+  - ✅ `test/apply_indent.lua` - Direct indentation application via lua (bypasses `=` command issues)
+  - ✅ Individual integration tests pass and match unit test results
+  - ⚠️ **Known Issue**: Multi-test runs have timing/state conflicts (individual tests work correctly)
 
 ### Phase 3: Validation & Polish
 - [ ] **Test against unit tests**: Unit tests for core logic
