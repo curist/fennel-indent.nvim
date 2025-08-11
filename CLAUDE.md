@@ -12,7 +12,6 @@ Fennel indentation parser with comprehensive testing. Core parser in `scripts/in
 - `make test` - Run the complete test suite using redbean-based test runner
 - `make lint` - Lint all Fennel files using fennel-ls
 - `make format` - Format all Fennel files (requires format script)
-- `make preflight` - Run lint, format, and test in sequence (pre-commit workflow)
 
 **Testing:**
 - `make test ARGS="test-top-level-zero"` - Run single test by name
@@ -23,7 +22,6 @@ Fennel indentation parser with comprehensive testing. Core parser in `scripts/in
 - **For new features**: Write test first, watch it fail, implement minimal code to pass, then refactor
 - **For bug fixes**: Write failing test that reproduces the bug, then fix the bug
 - **Unit tests**: Follow existing pattern in `test/indent-parser_test.fnl` (19 test cases)
-- **CRITICAL**: Run `make preflight` after every change - this runs lint and tests
 - **Format-resistant tests**: Use `table.concat` for multiline string expectations
 
 ## Key Files

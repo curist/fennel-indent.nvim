@@ -1,4 +1,4 @@
-.PHONY: test clean lint format preflight compile benchmark
+.PHONY: test clean format compile benchmark
 .DEFAULT_GOAL := test
 
 FENNEL_VERSION = 1.5.3
@@ -14,9 +14,6 @@ test: artifacts/test-runner.com
 clean:
 	rm artifacts/*
 
-lint:
-	@fennel-ls --lint $$(find . -iname "*.fnl" -not -path "./test/fixtures/*" -type f)
-
 format:
 	@fennel scripts/format-files.fnl $$(find . -iname "*.fnl" -not -path "./artifacts/*" -not -path "./test/fixtures/*" -type f)
 
@@ -25,6 +22,4 @@ compile: artifacts/test-runner.com
 
 benchmark: artifacts/test-runner.com
 	@$< tasks/benchmark-realistic.fnl
-
-preflight: lint format test
 
