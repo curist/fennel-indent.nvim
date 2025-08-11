@@ -15,10 +15,10 @@ clean:
 	rm artifacts/*
 
 lint:
-	@fennel-ls --lint $$(find . -iname "*.fnl" -type f)
+	@fennel-ls --lint $$(find . -iname "*.fnl" -not -path "./test/fixtures/*" -type f)
 
 format:
-	@fennel scripts/format-files.fnl $$(find . -iname "*.fnl" -not -path "./artifacts/*" -type f)
+	@fennel scripts/format-files.fnl $$(find . -iname "*.fnl" -not -path "./artifacts/*" -not -path "./test/fixtures/*" -type f)
 
 compile: artifacts/test-runner.com
 	@$< tasks/compile-to-lua.fnl

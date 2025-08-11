@@ -8,10 +8,10 @@
   (let [input-path "scripts/indent-parser.fnl"
         output-dir "lua/fennel-indent"
         output-path (.. output-dir "/indent-parser.lua")]
-    
+
     ;; Ensure output directory exists
     (os.execute (.. "mkdir -p " output-dir))
-    
+
     ;; Read Fennel source
     (let [fennel-code (with-open [file (io.open input-path "r")]
                         (file:read "*a"))]
