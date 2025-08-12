@@ -272,8 +272,10 @@ local function calculate_indent(line, line_num, frame_stack, align_heads)
     else
       return 0
     end
-  else
+  elseif "else" then
     return 0
+  else
+    return nil
   end
 end
 local function fix_indentation(input, _3falign_heads)

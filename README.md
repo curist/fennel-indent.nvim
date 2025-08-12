@@ -12,7 +12,10 @@ Neovim indent plugin for Fennel code using both `indentexpr` and `formatexpr`.
   ft = 'fennel',
   opts = {
     -- Optional: Configure semantic alignment (default shown)
-    semantic_alignment = { 'if', 'and', 'or', '..', '->', '->>', '-?>', '-?>>' }
+    semantic_alignment = {
+      'if', 'and', 'or', '..', '->', '->>', '-?>', '-?>>',
+      '%', '*', '+', '/', '-', '>=', '//', '<=', '^', '>', '<', '=', 'not=',
+    }
   }
 }
 ```
@@ -41,7 +44,10 @@ The plugin automatically enables for `.fnl` files. Both approaches work seamless
 ```lua
 require('fennel-indent').setup({
   -- Default semantic alignment for multi-token forms (vector format)
-  semantic_alignment = { 'if', 'and', 'or', '..', '->', '->>', '-?>', '-?>>' }
+  semantic_alignment = {
+    'if', 'and', 'or', '..', '->', '->>', '-?>', '-?>>',
+    '%', '*', '+', '/', '-', '>=', '//', '<=', '^', '>', '<', '=', 'not=',
+  }
 })
 ```
 

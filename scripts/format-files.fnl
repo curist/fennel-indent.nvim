@@ -33,7 +33,9 @@
   (if (= (length args) 0)
       (handle-error "Usage: fennel scripts/format-files.fnl <file1.fnl> [file2.fnl ...]")
       (let [align-heads {:if true :and true :or true :.. true
-                         :-> true :->> true :-?> true :-?>> true}]
+                         :-> true :->> true :-?> true :-?>> true
+                         :+ true :- true :* true :/ true :// true :% true :^ true
+                         :> true :< true :>= true :<= true := true :not= true}]
         (format-files args align-heads))))
 
 ; If running as script (not being required), run main

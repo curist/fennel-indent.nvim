@@ -252,7 +252,7 @@
           0)
 
       ; 7. Top-level → 0
-      0)))
+      :else 0)))
 
 (fn fix-indentation [input ?align-heads]
   "Fix indentation following spec.md rules exactly"
