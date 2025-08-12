@@ -180,8 +180,12 @@
               (when (= frame.type want)
                 (set indent 
                   (if (= want :list)
-                      ; List: use base indent (opener_line_indent + 2, with mid-line bump)
-                      (let [base0 (+ frame.indent 2)
+                      ; List: use base indent (includes ALIGN_HEADS logic + mid-line bump)
+                      (let [base0 (if (and frame.head_symbol 
+                                           frame.first_arg_col
+                                           (. align-heads frame.head_symbol))
+                                      frame.first_arg_col
+                                      (+ frame.indent 2))
                             base (if (> frame.open_col frame.indent)
                                      (math.max base0 (+ frame.open_col 2))
                                      base0)]

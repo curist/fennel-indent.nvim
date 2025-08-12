@@ -186,4 +186,19 @@
      #(let [input "(let [name 1\nvalue\n2]\nbody)"  ; binding vector with multiline values
             expected "(let [name 1\n      value\n      2]\n  body)"  ; all elements anchor at [+1
             result (parser.fix-indentation input)]
+        (assert.= expected result))))
+
+ :test-list-closer-respects-align-heads
+ (fn []
+   "List closer ) respects ALIGN_HEADS configuration"
+   (testing "closer ) aligns to first_arg_col when ALIGN_HEADS enabled"
+     #(let [input "(if test\n    then-branch\n    else-branch\n)"  ; closer at wrong position
+            expected "(if test\n    then-branch\n    else-branch\n    )"  ; closer should align to first_arg_col (under 'test')
+            result (parser.fix-indentation input {:if true})]
+        (assert.= expected result)))
+
+   (testing "closer ) uses structural indent when ALIGN_HEADS disabled"
+     #(let [input "(if test\n  then-branch\n  else-branch\n    )"  ; closer at wrong position
+            expected "(if test\n  then-branch\n  else-branch\n  )"  ; closer should use base (opener_line_indent + 2)
+            result (parser.fix-indentation input {})]
         (assert.= expected result))))}
