@@ -189,7 +189,12 @@ local function calculate_indent(line, line_num, frame_stack, align_heads)
         local frame = frame_stack[i]
         if (frame.type == want) then
           if (want == "list") then
-            local base0 = (frame.indent + 2)
+            local base0
+            if (frame.head_symbol and frame.first_arg_col and align_heads[frame.head_symbol]) then
+              base0 = frame.first_arg_col
+            else
+              base0 = (frame.indent + 2)
+            end
             local base
             if (frame.open_col > frame.indent) then
               base = math.max(base0, (frame.open_col + 2))
