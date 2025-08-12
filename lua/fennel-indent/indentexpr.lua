@@ -35,10 +35,9 @@ end
 local function get_cached_context(target_line, lines)
   local current_version = vim.api.nvim_buf_get_changedtick(0)
   
-  -- Only invalidate cache if buffer actually changed
-  -- For benchmarking scenarios where we're just calling indentexpr repeatedly
-  -- on the same buffer, we want to preserve the cache
-  if cache.buffer_version == 0 then
+  -- Invalidate cache if buffer has changed
+  if cache.buffer_version ~= current_version then
+    cache.line_cache = {}
     cache.buffer_version = current_version
   end
   
