@@ -137,22 +137,17 @@ Real-world benchmarks comparing different formatting approaches:
 
 | Lines | `gg=G` (indentexpr) | `gqG` (formatexpr) | Performance Difference |
 |-------|--------------------|--------------------|------------------------|
-| 100   | 44ms (2.3/ms)      | 33ms (3.0/ms)      | 1.3x faster            |
-| 500   | 207ms (2.4/ms)     | 37ms (13.7/ms)     | **5.7x faster**        |
-| 1000  | 726ms (1.4/ms)     | 37ms (27.1/ms)     | **19.7x faster**       |
-| 2000  | 2.9s (0.7/ms)      | 42ms (47.6/ms)     | **68.6x faster**       |
-| 5000  | 18.6s (0.3/ms)     | 56ms (89.7/ms)     | **333x faster**        |
+| 100   | 41ms (2.5/ms)      | 34ms (2.9/ms)      | 1.2x faster            |
+| 500   | 203ms (2.5/ms)     | 37ms (13.5/ms)     | **5.5x faster**        |
+| 1000  | 719ms (1.4/ms)     | 38ms (26.5/ms)     | **19.0x faster**       |
+| 2000  | 2.9s (0.7/ms)      | 41ms (49.2/ms)     | **70.3x faster**       |
+| 5000  | 18.5s (0.3/ms)     | 53ms (94.0/ms)     | **348x faster**        |
 
 **Key Takeaway**: Use `gqG` instead of `gg=G` for whole-file formatting on large files.
 
 **Why the difference?**
-- **`gg=G`**: Calls `indentexpr` line-by-line (O(n²) despite caching)
+- **`gg=G`**: Calls `indentexpr` line-by-line (O(n²) behavior)
 - **`gqG`**: Uses `formatexpr` with range-based processing (O(n), single-pass)
-
-**Performance optimizations included:**
-- Smart caching system for `indentexpr` (3x improvement over naive implementation)
-- Tokenization optimizations with lookup tables and early exits
-- Single-pass `formatexpr` using efficient `fix-indentation` function
 
 ## Technical Details
 
@@ -161,7 +156,6 @@ Real-world benchmarks comparing different formatting approaches:
 - **Core parser**: Compiled from `scripts/indent-parser.fnl` to pure Lua with tokenization optimizations
 - **Build system**: Uses custom redbean-based test runner  
 - **Frame stack**: Tracks nested contexts with precedence rules
-- **Smart caching**: Caches frame stacks every 20 lines, rebuilds from nearest cache point
 
 ### Dual Implementation Benefits
 
@@ -201,6 +195,7 @@ The project follows strict TDD methodology with comprehensive test coverage:
 ## AI / LLM Usage
 
 This project was developed with assistance from large language models (LLMs).
+
 LLMs were used to help with:
 
 * Drafting and iterating on code implementations

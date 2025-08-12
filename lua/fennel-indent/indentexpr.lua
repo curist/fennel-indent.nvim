@@ -1,64 +1,14 @@
 -- Load the compiled indent parser
 local indent_parser = require("fennel-indent.indent-parser")
 
--- Cache for frame stacks at strategic points
-local cache = {
-  line_cache = {},        -- line_num -> frame_stack
-  buffer_version = 0,     -- Track buffer changes
-  cache_interval = 20     -- Cache every N lines (reduced for better hit rate)
-}
-
--- Find the nearest cached frame stack before target line
-local function find_nearest_cache_point(target_line)
-  local best_line = 0
-  for cached_line, _ in pairs(cache.line_cache) do
-    if cached_line < target_line and cached_line > best_line then
-      best_line = cached_line
-    end
-  end
-  return best_line > 0 and best_line or nil
-end
-
--- Deep copy frame stack for caching
-local function copy_frame_stack(frame_stack)
-  local copy = {}
-  for i, frame in ipairs(frame_stack) do
-    copy[i] = {}
-    for k, v in pairs(frame) do
-      copy[i][k] = v
-    end
-  end
-  return copy
-end
-
--- Get cached context or rebuild from nearest cache point
-local function get_cached_context(target_line, lines)
-  local current_version = vim.api.nvim_buf_get_changedtick(0)
-  
-  -- Invalidate cache if buffer has changed
-  if cache.buffer_version ~= current_version then
-    cache.line_cache = {}
-    cache.buffer_version = current_version
-  end
-  
-  local nearest_cached = find_nearest_cache_point(target_line)
-  local start_line = nearest_cached or 1
+-- Build frame stack by processing all lines before target
+local function build_frame_stack(target_line, lines)
   local frame_stack = {}
   
-  -- Start with cached frame stack if available
-  if nearest_cached then
-    frame_stack = copy_frame_stack(cache.line_cache[nearest_cached])
-  end
-  
-  -- Process lines from cache point (or start) to target
-  for i = start_line, target_line - 1 do
+  -- Process lines from 1 to target_line - 1
+  for i = 1, target_line - 1 do
     local line = lines[i] or ""
     indent_parser["tokenize-line"](line, i, frame_stack)
-    
-    -- Cache at intervals
-    if i % cache.cache_interval == 0 then
-      cache.line_cache[i] = copy_frame_stack(frame_stack)
-    end
   end
   
   return frame_stack
@@ -80,9 +30,9 @@ local function indentexpr(line_num)
       return 0
     end
 
-    -- Build context using cached frame stacks
+    -- Build context by processing all previous lines
     -- This gracefully handles malformed/unclosed code per spec lines 129-135
-    local frame_stack = get_cached_context(line_num, lines)
+    local frame_stack = build_frame_stack(line_num, lines)
 
     -- Get the current line and calculate its indent
     local current_line = lines[line_num] or ""
