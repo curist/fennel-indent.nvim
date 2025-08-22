@@ -169,8 +169,9 @@
   (let [top-frame (when (> (length frame-stack) 0)
                     (. frame-stack (length frame-stack)))]
     (if
-      ; 1. Line starts with closer → indent as if new child in that container
-      (line-starts-with-closer? line)
+      ; 1. Line starts with closer → indent as if new child in that container (unless inside string)
+      (and (line-starts-with-closer? line)
+           (not (and top-frame (= top-frame.type :string))))
       (let [first (string.sub (string.match line "^%s*(.*)") 1 1)
             want (case first ")" :list "]" :vector "}" :table)]
         (var indent 0)

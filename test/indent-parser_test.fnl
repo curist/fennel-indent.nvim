@@ -201,4 +201,57 @@
      #(let [input "(if test\n  then-branch\n  else-branch\n    )"  ; closer at wrong position
             expected "(if test\n  then-branch\n  else-branch\n  )"  ; closer should use base (opener_line_indent + 2)
             result (parser.fix-indentation input {})]
+        (assert.= expected result))))
+
+ :test-closers-in-strings
+ (fn []
+   "Closers inside strings should not be treated as structural closers"
+   (testing "closing paren in string content should use string anchor"
+     #(let [input (table.concat ["(print \"hello"
+                                 ")" 
+                                 "world\")"
+                                 ""] "\n")
+            expected (table.concat ["(print \"hello"
+                                    "        )"
+                                    "        world\")"
+                                    ""] "\n")
+            result (parser.fix-indentation input)]
+        (assert.= expected result)))
+
+   (testing "closing bracket in string content should use string anchor" 
+     #(let [input (table.concat ["(print \"data["
+                                 "]"
+                                 "more\")"
+                                 ""] "\n")
+            expected (table.concat ["(print \"data["
+                                    "        ]"
+                                    "        more\")"
+                                    ""] "\n")
+            result (parser.fix-indentation input)]
+        (assert.= expected result)))
+
+   (testing "closing brace in string content should use string anchor"
+     #(let [input (table.concat ["(print \"obj{"
+                                 "}"
+                                 "end\")"
+                                 ""] "\n")
+            expected (table.concat ["(print \"obj{"
+                                    "        }"
+                                    "        end\")"
+                                    ""] "\n")
+            result (parser.fix-indentation input)]
+        (assert.= expected result)))
+
+   (testing "multiple closers in string should all use string anchor"
+     #(let [input (table.concat ["(print \"test)"
+                                 "]"
+                                 "}"
+                                 "done\")"
+                                 ""] "\n")
+            expected (table.concat ["(print \"test)"
+                                    "        ]"
+                                    "        }"
+                                    "        done\")"
+                                    ""] "\n")
+            result (parser.fix-indentation input)]
         (assert.= expected result))))}

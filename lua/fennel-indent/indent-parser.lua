@@ -171,7 +171,7 @@ local function calculate_indent(line, line_num, frame_stack, align_heads)
   else
     top_frame = nil
   end
-  if line_starts_with_closer_3f(line) then
+  if (line_starts_with_closer_3f(line) and not (top_frame and (top_frame.type == "string"))) then
     local first = string.sub(string.match(line, "^%s*(.*)"), 1, 1)
     local want
     if (first == ")") then
